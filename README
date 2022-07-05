@@ -1,0 +1,1 @@
+python readArqs.py 3x3NS.csv output.txt
