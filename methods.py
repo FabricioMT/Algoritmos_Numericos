@@ -1,8 +1,9 @@
 import numpy as np
-from readArqs import readData
+from readArqs import readArgs
+from timeit import default_timer as timer
+from datetime import timedelta
 
 def gauss(A,B):
-    linhaA = A.shape
     for i in range(1, linhaA):
         for j in range(i, linhaA):
             matAUX = 0
@@ -11,7 +12,9 @@ def gauss(A,B):
                 A[k] = A[k] - matAUX * A[i-1]
                 B[k] = B[k] - matAUX * B[i-1]
 
-def fatoraLU(A):  
+
+def fatoraLU(A): 
+    start = timer()
     U = np.copy(A)  
     n = np.shape(U)[0]  
     L = np.eye(n)  
@@ -20,8 +23,20 @@ def fatoraLU(A):
             L[i,j] = U[i,j]/U[j,j]  
             for k in np.arange(j+1,n):  
                 U[i,k] = U[i,k] - L[i,j]*U[j,k]  
-            U[i,j] = 0  
+            U[i,j] = 0
+    end = timer()
+    timing = timedelta(seconds=end-start)
+    print("tempo de execução :",timing)
     return L, U
 
 if __name__ == '__main__':
-    readData()
+    A,B,I = readArgs()
+    #gauss(A,B)
+
+    L, U = fatoraLU(A)
+    
+
+    print(L)
+    print()
+    print(U)
+
