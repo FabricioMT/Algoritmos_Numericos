@@ -5,10 +5,10 @@ from datetime import timedelta
 from os import listdir
 
 def readFile(inputs):
-    shape = tuple(np.loadtxt(fname=inputs, dtype=int, delimiter=',', max_rows=1, usecols=(0,1)))
-    PreSim = np.loadtxt(fname=inputs, dtype=str, delimiter=',', max_rows=1, usecols=(2,3))
-    A = np.loadtxt(fname=inputs, dtype=np.float64, delimiter=',', skiprows=1, max_rows=shape[1], usecols=np.arange(0,shape[1]))
-    B = np.loadtxt(fname=inputs, dtype=np.float64, delimiter=',', skiprows=shape[1], max_rows=shape[0], usecols=np.arange(0,shape[1]))
+    shape = tuple(np.loadtxt(fname=inputs, dtype=int, delimiter=' ', max_rows=1, usecols=(0,1)))
+    PreSim = np.loadtxt(fname=inputs, dtype=str, delimiter=' ', max_rows=1, usecols=(2,3))
+    A = np.loadtxt(fname=inputs, dtype=np.float64, delimiter=' ', skiprows=1, max_rows=shape[1], usecols=np.arange(0,shape[1]))
+    B = np.loadtxt(fname=inputs, dtype=np.float64, delimiter=' ', skiprows=shape[1], max_rows=shape[0], usecols=np.arange(0,shape[1]))
 
     if shape[0] != 1:
         B = np.reshape(B, (shape[0],shape[1],1))
@@ -56,6 +56,14 @@ def gauss(A, B):
     print(f"\ntempo de execução Gauss: {timing}\n")
     return A
 
+def subSucessiva(linhaA, A, B, X):	
+	for i in range((linhaA-1), -1, -1):
+		X[i] = B[i]
+		for j in range((linhaA-1), 0, -1):
+			if i != j:
+				X[i]= X[i] - A[i][j] * X[j]
+		X[i] = X[i]/A[i][i]
+
 def fatoraLU(A):
     start = timer()
     U = np.copy(A)
@@ -80,11 +88,10 @@ if __name__ == '__main__':
     inputs, outputs = readArgs()
     A, B, precision, simet = readFile(inputs)
     saveOutput(outputs, A)
-    
-    """
-    print(gauss(A, B, dimensionM))
+   
+    #print(gauss(A, B))
 
     L, U = fatoraLU(A)
     print(L)
     print()
-    print(U)"""
+    print(U)
