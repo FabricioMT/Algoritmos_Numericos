@@ -3,8 +3,9 @@ from readArqs import Args
 from timeit import default_timer as timer
 from datetime import timedelta
 
-def gauss(A, B, dimensionM):
+def gauss(A, B):
     start = timer()
+    (dimensionM, dimensionN) = A.shape
     for i in range(1, dimensionM):
         for j in range(i, dimensionM):
             matAUX = 0
@@ -38,11 +39,11 @@ def fatoraLU(A):
 
 if __name__ == '__main__':
     A, B, precision, simet = Args()
-    (dimensionM, dimensionN) = A.shape
 
+    """
     print(gauss(A, B, dimensionM))
 
     L, U = fatoraLU(A)
     print(L)
     print()
-    print(U)
+    print(U)"""

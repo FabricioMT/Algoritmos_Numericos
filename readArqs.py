@@ -7,9 +7,13 @@ def readFile(path):
     PreSim = np.loadtxt(fname=path, dtype=str, delimiter=',', max_rows=1, usecols=(2,3))
     A = np.loadtxt(fname=path, dtype=np.float64, delimiter=',', skiprows=1, max_rows=shape[1], usecols=np.arange(0,shape[1]))
     B = np.loadtxt(fname=path, dtype=np.float64, delimiter=',', skiprows=shape[1], max_rows=shape[0], usecols=np.arange(0,shape[1]))
-    
+
+    if shape[0] != 1:
+        B = np.reshape(B, (shape[0],shape[1],1))
+    else:
+        B = np.reshape(B, (shape[1],shape[0]))
+
     A = np.reshape(A, (shape[1],shape[1]))
-    B = np.reshape(B, (shape[1],shape[0]))
     P = np.float64(PreSim[0])
     S = PreSim[1]
 
