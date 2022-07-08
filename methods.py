@@ -3,6 +3,7 @@ import numpy as np
 from timeit import default_timer as timer
 from datetime import timedelta
 from os import listdir
+from math import sqrt
 
 def readFile(inputs):
     shape = tuple(np.loadtxt(fname=inputs, dtype=int, delimiter=' ', max_rows=1, usecols=(0,1)))
@@ -56,14 +57,6 @@ def gauss(A, B):
     print(f"\ntempo de execução Gauss: {timing}\n")
     return A
 
-def subSucessiva(linhaA, A, B, X):	
-	for i in range((linhaA-1), -1, -1):
-		X[i] = B[i]
-		for j in range((linhaA-1), 0, -1):
-			if i != j:
-				X[i]= X[i] - A[i][j] * X[j]
-		X[i] = X[i]/A[i][i]
-
 def fatoraLU(A):
     start = timer()
     U = np.copy(A)
@@ -81,17 +74,36 @@ def fatoraLU(A):
     print(f"\ntempo de execução LU: {timing}\n")
     return L, U
 
+def cholesky(M):
+    start = timer()
+    A = np.copy(M)
+    n = A.shape[0]
+    R = np.zeros_like(A)
+
+    for k in range(n):
+        R[k,k] = sqrt(A[k,k])
+        R[k,k+1:] = A[k,k+1:]/R[k,k]
+        for j in range(k+1,n):
+            A[j,j:] = A[j,j:] - R[k,j] * R[k,j:]
+    
+    end = timer()
+    timing = timedelta(seconds=end-start)
+    print(f"\ntempo de execução Cholesky: {timing}\n")
+    
+    return R
+
 def saveOutput(output, X):
 	np.savetxt(output, X, delimiter=',', header='Resposta')
 
 if __name__ == '__main__':
     inputs, outputs = readArgs()
     A, B, precision, simet = readFile(inputs)
-    saveOutput(outputs, A)
-   
-    #print(gauss(A, B))
+    #saveOutput(outputs, A)
+    #C, X = np.array_split(B,2)
 
-    L, U = fatoraLU(A)
-    print(L)
+    #print(gauss(A, B))
+    #L = cholesky(A)
+    
+    #L, U = fatoraLU(A)
+    #pprint(L)
     print()
-    print(U)
