@@ -9,7 +9,7 @@ def readFile(inputs):
     shape = tuple(np.loadtxt(fname=inputs, dtype=int, delimiter=' ', max_rows=1, usecols=(0,1)))
     PreSim = np.loadtxt(fname=inputs, dtype=str, delimiter=' ', max_rows=1, usecols=(2,3))
     A = np.loadtxt(fname=inputs, dtype=np.float64, delimiter=' ', skiprows=1, max_rows=shape[1], usecols=np.arange(0,shape[1]))
-    B = np.loadtxt(fname=inputs, dtype=np.float64, delimiter=' ', skiprows=shape[1], max_rows=shape[0], usecols=np.arange(0,shape[1]))
+    B = np.loadtxt(fname=inputs, dtype=np.float64, delimiter=' ', skiprows=(shape[1]+1), max_rows=shape[0], usecols=np.arange(0,shape[1]))
 
     if shape[0] != 1:
         B = np.reshape(B, (shape[0],shape[1],1))
@@ -109,49 +109,50 @@ def cholesky(A):
     return MI
 
 
- #Os métodos Gauss-Jacobi e Gauss-Seidel são métodos iterativos, portanto, devem utilizar a precisão
-  #informada no arquivo e para o valor de X0 o valor de G no sistema iterativo Xk= CXk−1 + G.
-"""def jacobi(A,precision):
-    #128
-    n = A.shape[0]
-    for k in range(n):"""
+def jacobi(A,B,precision):
 
-def jacobi(A,B,precision,tol,N):  
+    dimensionM = A.shape[0]
+    x = np.zeros(dimensionM)
 
-    dimensionM = A.shape[0]  
-    MI = np.zeros(dimensionM)  
-    it = 0  
-    #iteracoes 
-    while (k < N):  
-        it = it+1  
-        #iteracao de Jacobi  
+    DiagA = np.diagflat(np.diag(A))
+    C = A - np.diagflat(np.diag(A))
+    x0 = DiagA/B
+    x0 = np.diag(x0)
+
+    D = precision + 1
+    while (D > precision):  
         for i in np.arange(dimensionM):  
-            MI[i] = B[i]  
-            for j in np.concatenate((np.arange(0,i),np.arange(i+1,dimensionM))):  
-                MI[i] -= A[i,j]*precision[j]  
-            MI[i] /= A[i,i]
-        #tolerancia  
-        if (np.linalg.norm(MI-precision,np.inf) < tol):  
-            return MI  
-        #prepara nova iteracao 
-        precision = np.copy(MI)  
-    raise NameError('num. max. de iteracoes excedido.')
+            x[i] = B[i]
+            for j in np.concatenate((np.arange(0,i),np.arange(i+1,dimensionM))):
+                x[i] -= A[i,j]*x0[j]
+            x[i] /= A[i,i]
 
-def jacobiA(A,B,N):
-    """Solves the equation Ax=b via the Jacobi iterative method."""
-    # Create an initial guess if needed                                                                                                                                                            
-    dimensionM = A.shape[0]  
-    MI = np.zeros(dimensionM)
+        d = np.linalg.norm(x-x0,np.inf)  
+        D = d/max(np.fabs(x))
+        print(D)
+        if (D < precision):
+            return x
+        x0 = np.copy(x)
 
-    # Create a vector of the diagonal elements of A                                                                                                                                                
-    # and subtract them from A                                                                                                                                                                     
-    D = np.diag(A)
-    R = A - np.diagflat(D)
+def jacobiA(A,b,precision):                                                                                                                                                          
+    dimensionM = A.shape[0]
+    x = np.zeros(dimensionM)
+    DiagA = np.diagflat(np.diag(A))
+    x0 = DiagA/B                                                                                                                                                              
+    V = np.diag(A)
+    R = A - np.diagflat(V)
+    D = precision +1
+    while (D > precision):  
+        for i in np.arange(dimensionM):
+            x = (b - np.dot(R,x)) / V
 
-    # Iterate for N times                                                                                                                                                                          
-    for i in range(N):
-        MI = (B - np.dot(R,MI)) / D
-    return MI
+        d = np.linalg.norm(x-x0,np.inf) 
+        D = d/(np.max(np.fabs(x)))
+
+        if (D < precision):
+            return x
+        x0 = np.copy(x)                                                                                                                                                                        
+
 
 def saveOutput(output, X):
 	np.savetxt(output, X, delimiter=',', header='Resposta')
@@ -162,10 +163,19 @@ if __name__ == '__main__':
 
     N = 25
 
-    L = jacobiA(A,B,N)
-    #saveOutput(outputs, A)
-    #C, X = np.array_split(B,2)
-    #print(A)
+    L = jacobi(A,B,precision)
+    print(L)
     #print(gauss(A, B))
     #L = cholesky(A)
-    print(L)
+    """DiagA = np.diagflat(np.diag(A))
+    C = A - np.diagflat(np.diag(A))
+    G = DiagA/B
+    print(DiagA)
+    print(C)"""
+
+    #print(A)
+    #print(B)
+    #for i in range(3):
+    #print(np.max(np.fabs(X[i]-X2[i])))
+
+    #print(np.linalg.norm(B-A,np.inf))
