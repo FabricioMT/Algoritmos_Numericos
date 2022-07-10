@@ -41,45 +41,8 @@ def readArgs():
         exit(1)
     return arq
 
-def gauss(A, B):
-    dimensionM = A.shape[0]
-
-    for i in np.arange(1, dimensionM):
-        for j in np.arange(i, dimensionM):
-            matAUX = A[j][i-1] / A[i-1][i-1]
-            for k in np.arange(j,j+1):
-                A[k] = A[k] - matAUX * A[i-1]
-                B[k] = B[k] - matAUX * B[i-1]
-
-    for k in np.arange(dimensionM):
-        for i in np.arange(k-1):
-
-for(K = 0; K < n-1; K++){ // cada etapa
-        for(i = K+1; i < n;i++){ // cada linha
-            M = A[i][K]/A[K][K]; // Mik = Aik/Akk
-            for(j=K; j < n; j++) A[i][j] = A[i][j] - M*A[K][j]; // Li <- Li - Mik * Lk
-            B[i] = B[i] - M*B[K];
-        }
-    }
-    for(i = n-1; i >= 0; i--){
-        for(j=i+1; j<n;j++) B[i] = B[i]- X[j]*A[i][j];
-        X[i] = B[i]/A[i][i];
-    }
-    return X;
-
-def Gaus(A,B):
-    aux = np.copy(E[1,:])
-    E[1,:] = np.copy(E[0,:])
-    E[0,:] = np.copy(aux)
-        print(E)
-
-
-
-    return x
-
 def fatoraLU(A):
     start = timer()
-
     U = np.copy(A)
     dimensionM = A.shape[0]
     L = np.eye(dimensionM)
@@ -92,11 +55,44 @@ def fatoraLU(A):
             U[i,j] = 0
 
     end = timer()
-
     timing = timedelta(seconds=end-start)
     timedelta()
-    print(f"\ntempo de execução LU: {timing}\n")
     return L, U
+
+def Uy(U, y):
+
+    x = np.zeros_like(y)
+
+    for i in range(len(x), 0, -1):
+      x[i-1] = (y[i-1] - np.dot(U[i-1, i:], x[i:])) / U[i-1, i-1]
+
+    return x
+
+def lu_solve(L, U, b):
+    y = Lb(L,b)
+    x = Uy(U,y)
+
+    return x
+
+def Lb(L, b):
+    y = []
+    for i in range(len(b)):
+        y.append(b[i])
+        for j in range(i):
+            y[i]=y[i]-(L[i, j]*y[j])
+        y[i] = y[i]/L[i, i]
+
+    return y
+
+def LU(A,b):
+    start = timer()
+    L,U = fatoraLU(A)
+    x = lu_solve(L,U,b)
+    end = timer()
+
+    timing = timedelta(seconds=end-start)
+    print(f"\ntempo de execução LU: {timing}\n")
+    return x
 
 def cholesky(A):
     start = timer()
@@ -117,7 +113,7 @@ def cholesky(A):
     MI = np.diag(MI)
     return MI
 
-def jacobiX(A,B,precision):
+def jacobi(A,B,precision):
     start = timer()
     dimensionM = A.shape[0]
     x = np.zeros(dimensionM)
@@ -137,39 +133,13 @@ def jacobiX(A,B,precision):
 
         d = np.linalg.norm(x-x0,np.inf)
         D = d/max(np.fabs(x))
-        print(D)
+        #print(D)
         if (D < precision):
             end = timer()
             timing = timedelta(seconds=end-start)
             print(f"\nTempo de execução [Jacobi]: {timing}\n")
             return x
         x0 = np.copy(x)
-
-def jacobi(A,B,precision):
-
-    dimensionM = A.shape[0]
-    x = np.zeros(dimensionM)
-
-    DiagA = np.diagflat(np.diag(A))
-    C = A - np.diagflat(np.diag(A))
-    x0 = DiagA/B
-    x0 = np.diag(x0)
-
-    D = precision + 1
-    while (D > precision):  
-        for i in np.arange(dimensionM):  
-            x[i] = B[i]
-            for j in np.concatenate((np.arange(0,i),np.arange(i+1,dimensionM))):
-                x[i] -= A[i,j]*x0[j]
-            x[i] /= A[i,i]
-
-        d = np.linalg.norm(x-x0,np.inf)  
-        D = d/max(np.fabs(x))
-        print(D)
-        if (D < precision):
-            return x
-        x0 = np.copy(x)
-
 
 def seidel(A,B,precision):  
     start = timer()
@@ -193,7 +163,7 @@ def seidel(A,B,precision):
             x[i] /= A[i,i]
         d = np.linalg.norm(x-x0,np.inf)
         D = d/max(np.fabs(x))
-        print(D)
+        #print(D)
         if (D < precision):
             end = timer()
             timing = timedelta(seconds=end-start)
@@ -206,26 +176,20 @@ if __name__ == '__main__':
     inputs= readArgs()
     A, B, precision, simet = readFile(inputs)
 
-
     print("----------------------###-------------------###-------------------")
-    L, U = fatoraLU(A) 
+    print(LU(A,B))    
     print("----------------------###-------------------###-------------------")  
-    #print(L)
-    print("----------------------###-------------------###-------------------")
     #print(U)
     print("----------------------###-------------------###-------------------")
-    print(cholesky(A))
+    if simet == "S":
+        print(cholesky(A))
+    else:
+        print("!! Matriz não simetrica !")
+        print("!! Não há resultado de Cholesky !!")
+    
     print("----------------------###-------------------###-------------------")
     print(jacobi(A,B,precision))
     print("----------------------###-------------------###-------------------")
     print(seidel(A,B,precision))   
     print("----------------------###-------------------###-------------------")
-    print(Gaus(A,B)) 
 
-
-    #print(A)
-    #print(B)
-    #for i in range(3):
-    #print(np.max(np.fabs(X[i]-X2[i])))
-
-    #print(np.linalg.norm(B-A,np.inf))
