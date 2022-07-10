@@ -23,7 +23,7 @@ def readFile(inputs):
     return A, B, P, S
 
 def readArgs():
-    if len(sys.argv) > 1:
+    if len(sys.argv) > 2:
         arq = 0
         file_input = listdir('./inputs/')
         for file in file_input:
@@ -39,11 +39,12 @@ def readArgs():
     else:
         print("Entrada de Dados Inválida !")
         exit(1)
-    return arq
+    return arq, sys.argv[2]
 
 def gauss(A, B):
-    dimensionM = A.shape[0]
+    start = timer()
 
+    dimensionM = A.shape[0]
     for i in np.arange(1, dimensionM):
         for j in np.arange(i, dimensionM):
             matAUX = A[j][i-1] / A[i-1][i-1]
@@ -51,31 +52,22 @@ def gauss(A, B):
                 A[k] = A[k] - matAUX * A[i-1]
                 B[k] = B[k] - matAUX * B[i-1]
 
-    for k in np.arange(dimensionM):
-        for i in np.arange(k-1):
+    end = timer()
 
-for(K = 0; K < n-1; K++){ // cada etapa
-        for(i = K+1; i < n;i++){ // cada linha
-            M = A[i][K]/A[K][K]; // Mik = Aik/Akk
-            for(j=K; j < n; j++) A[i][j] = A[i][j] - M*A[K][j]; // Li <- Li - Mik * Lk
-            B[i] = B[i] - M*B[K];
-        }
-    }
-    for(i = n-1; i >= 0; i--){
-        for(j=i+1; j<n;j++) B[i] = B[i]- X[j]*A[i][j];
-        X[i] = B[i]/A[i][i];
-    }
-    return X;
+    timing = timedelta(seconds=end-start)
+    print(f"\ntempo de execução Gauss: {timing}\n")
+    return A
 
-def Gaus(A,B):
-    aux = np.copy(E[1,:])
-    E[1,:] = np.copy(E[0,:])
-    E[0,:] = np.copy(aux)
-        print(E)
+def subSucessiva(A, B, X):
+    dimensionM = A.shape[0]
 
+    for i in np.arange((dimensionM-1), -1, -1):
+        X[i] = B[i]
+        for j in np.arange((dimensionM-1), 0, -1):
+            if i != j:
+                X[i]= X[i] - A[i][j] * X[j]
+        X[i] = X[i]/A[i][i]
 
-
-    return x
 
 def fatoraLU(A):
     start = timer()
@@ -94,7 +86,6 @@ def fatoraLU(A):
     end = timer()
 
     timing = timedelta(seconds=end-start)
-    timedelta()
     print(f"\ntempo de execução LU: {timing}\n")
     return L, U
 
@@ -114,36 +105,9 @@ def cholesky(A):
 
     timing = timedelta(seconds=end-start)
     print(f"\ntempo de execução Cholesky: {timing}\n")
-    MI = np.diag(MI)
+    
     return MI
 
-def jacobiX(A,B,precision):
-    start = timer()
-    dimensionM = A.shape[0]
-    x = np.zeros(dimensionM)
-
-    DiagA = np.diagflat(np.diag(A))
-    C = A - np.diagflat(np.diag(A))
-    x0 = DiagA/B
-    x0 = np.diag(x0)
-    x0 = x0.astype(np.double)
-    D = precision + 1
-    while (D > precision):  
-        for i in np.arange(dimensionM):  
-            x[i] = B[i]
-            for j in np.concatenate((np.arange(0,i),np.arange(i+1,dimensionM))):
-                x[i] -= A[i,j]*x0[j]
-            x[i] /= A[i,i]
-
-        d = np.linalg.norm(x-x0,np.inf)
-        D = d/max(np.fabs(x))
-        print(D)
-        if (D < precision):
-            end = timer()
-            timing = timedelta(seconds=end-start)
-            print(f"\nTempo de execução [Jacobi]: {timing}\n")
-            return x
-        x0 = np.copy(x)
 
 def jacobi(A,B,precision):
 
@@ -170,58 +134,44 @@ def jacobi(A,B,precision):
             return x
         x0 = np.copy(x)
 
-
-def seidel(A,B,precision):  
-    start = timer()
-    A = A.astype(np.double)
-    B = B.astype(np.double)
-
+def jacobiA(A,b,precision):                                                                                                                                                          
     dimensionM = A.shape[0]
+    x = np.zeros(dimensionM)
     DiagA = np.diagflat(np.diag(A))
-    C = A - np.diagflat(np.diag(A))
-    x0 = DiagA/B
-    x0 = np.diag(x0)
-    x0 = x0.astype(np.double)
-    x = np.copy(x0)
-
-    D = precision + 1
+    x0 = DiagA/B                                                                                                                                                              
+    V = np.diag(A)
+    R = A - np.diagflat(V)
+    D = precision +1
     while (D > precision):  
-        for i in np.arange(dimensionM):  
-            x[i] = B[i]
-            for j in np.concatenate((np.arange(0,i),np.arange(i+1,dimensionM))):
-                x[i] -= A[i,j]*x[j]
-            x[i] /= A[i,i]
-        d = np.linalg.norm(x-x0,np.inf)
-        D = d/max(np.fabs(x))
-        print(D)
-        if (D < precision):
-            end = timer()
-            timing = timedelta(seconds=end-start)
-            print(f"\ntempo de execução [Seidel]: {timing}\n")
-            return x
-        x0 = np.copy(x)
+        for i in np.arange(dimensionM):
+            x = (b - np.dot(R,x)) / V
 
+        d = np.linalg.norm(x-x0,np.inf) 
+        D = d/(np.max(np.fabs(x)))
+
+        if (D < precision):
+            return x
+        x0 = np.copy(x)                                                                                                                                                                        
+
+
+def saveOutput(output, X):
+	np.savetxt(output, X, delimiter=',', header='Resposta')
 
 if __name__ == '__main__':
-    inputs= readArgs()
+    inputs, outputs = readArgs()
     A, B, precision, simet = readFile(inputs)
 
+    N = 25
 
-    print("----------------------###-------------------###-------------------")
-    L, U = fatoraLU(A) 
-    print("----------------------###-------------------###-------------------")  
-    #print(L)
-    print("----------------------###-------------------###-------------------")
-    #print(U)
-    print("----------------------###-------------------###-------------------")
-    print(cholesky(A))
-    print("----------------------###-------------------###-------------------")
-    print(jacobi(A,B,precision))
-    print("----------------------###-------------------###-------------------")
-    print(seidel(A,B,precision))   
-    print("----------------------###-------------------###-------------------")
-    print(Gaus(A,B)) 
-
+    L = jacobi(A,B,precision)
+    print(L)
+    #print(gauss(A, B))
+    #L = cholesky(A)
+    """DiagA = np.diagflat(np.diag(A))
+    C = A - np.diagflat(np.diag(A))
+    G = DiagA/B
+    print(DiagA)
+    print(C)"""
 
     #print(A)
     #print(B)
